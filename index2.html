@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Search with Filters</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select { padding: 8px; font-size: 16px; }
+    .result-item { padding: 10px 0; border-bottom: 1px solid #ccc; }
+    .tags { margin-top: 5px; }
+    .tag {
+      display: inline-block;
+      background-color: #0078d4;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    #suggestions {
+      border: 1px solid #ccc;
+      max-width: 300px;
+      position: absolute;
+      background: white;
+      z-index: 100;
+    }
+    .suggestion-item {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .suggestion-item:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Live Search Filter Example</h2>
+
+  <input type="text" id="searchInput" placeholder="Type to search..." autocomplete="off" />
+  <div id="suggestions"></div>
+
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+    <option value="relevance">Relevance</option>
+    <option value="date">Date</option>
+  </select>
+
+  <div id="resultsContainer"></div>
+
+  <script>
+    const data = [
+      {
+        title: "HTML Basics",
+        category: "relevance",
+        date: "2023-10-01",
+        tags: ["HTML", "Beginner"]
+      },
+      {
+        title: "CSS Flexbox Guide",
+        category: "relevance",
+        date: "2023-11-15",
+        tags: ["CSS", "Flexbox"]
+      },
+      {
+        title: "Latest Web Design Trends",
+        category: "date",
+        date: "2024-01-20",
+        tags: ["Trends", "Design"]
+      },
+      {
+        title: "JavaScript Async Patterns",
+        category: "relevance",
+        date: "2023-12-05",
+        tags: ["JavaScript", "Async"]
+      },
+      {
+        title: "2024 Web Dev Updates",
+        category: "date",
+        date: "2024-02-01",
+        tags: ["Trends", "JavaScript"]
+      },
+      {
+                title: 'DIGITAL PLATFORM PARTNER',
+                body: 'Organizations that will remain relevant and competitive in the modern economy will need to create digital platforms that connect and streamline all interactions within their commercial boundaries and beyond to other digitally interconnected ecosystems.',
+                category: 'relevance',
+                tags:['Digital Platform'],
+                date: "2025-03-10",
+            },
+            {
+                title: 'A platform for building digital organizations',
+                body: 'Digital platforms are transformative systems that support an ecosystem of end users, clients, suppliers, and digital product developers who collaborate and create value. Let ComUnity be your digital partner by taking care of the complex platform engineering layer so you can focus on building out a digital portal that differentiates your organization, improves competitiveness and creates business value.',
+                category: 'relevance',
+                tags:['Digital Platform', 'ComUnity'],
+                date: "2025-03-10",
+            },
+            {
+                title: 'Platform engineering',
+                body: 'Platform engineering is an emerging technology approach that can accelerate the delivery of applications and the pace at which they produce business value. It improves developer experience and productivity by providing self-service capabilities with automated infrastructure operations. This accelerates a product team’s delivery of customer value.',
+                category: 'relevance',
+                tags:['Platform engineering', 'Customer Value'],
+                date: "2025-03-10",
+            },
+            {
+                title: 'People Platform Process',
+                body: 'ComUnity works with clients to deploy a holistic, best-of-breed Platform Engineering stack, using our experienced teams to assist in the definition and implementation of the client’s digital platform strategy. Deployment can range from purely advisory services to fully-fledged platform building and operational services. We assist our clients to optimize internal operations and broader ecosystem engagement.',
+                category: 'relevance',
+                tags:['Platform engineering', 'ComUnity'],
+                date: "2025-03-10",
+            }
+    ];
+
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const suggestionsBox = document.getElementById("suggestions");
+
+    const allKeywords = Array.from(
+      new Set(data.flatMap(d => [d.title, ...d.tags]))
+    );
+
+    function filterAndRender() {
+      const query = searchInput.value.toLowerCase();
+      const category = categoryFilter.value;
+
+      const filtered = data.filter(item => {
+        const matchesCategory = category === 'all' || item.category === category;
+        const matchesSearch =
+          item.title.toLowerCase().includes(query) ||  item.body.toLowerCase().includes(query) ||
+          item.tags.some(tag => tag.toLowerCase().includes(query));
+        return matchesCategory && matchesSearch;
+      });
+
+      renderResults(filtered);
+    }
+
+    function renderResults(items) {
+      resultsContainer.innerHTML = "";
+
+      if (items.length === 0) {
+        resultsContainer.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div")
+        div.className = "result-item"
+        div.innerHTML = `
+          <strong>${item.title}</strong><br>
+          <strong>${item.body}</strong><br>
+          Category: ${item.category} | Date: ${item.date}
+          <div class="tags">
+            ${item.tags.map(tag => `<span class="tag" data-tag="${tag}">${tag}</span>`).join(' ')}
+          </div>
+        `;
+        resultsContainer.appendChild(div);
+      });
+
+      document.querySelectorAll(".tag").forEach(tagEl => {
+        tagEl.addEventListener("click", () => {
+          searchInput.value = tagEl.dataset.tag;
+          filterAndRender();
+        });
+      });
+    }
+
+    // Live filter on input
+    searchInput.addEventListener("input", () => {
+      const value = searchInput.value.toLowerCase();
+      suggestionsBox.innerHTML = "";
+
+      if (value.length > 0) {
+        const matches = allKeywords.filter(k => k.toLowerCase().includes(value)).slice(0, 5);
+        matches.forEach(match => {
+          const div = document.createElement("div");
+          div.className = "suggestion-item";
+          div.textContent = match;
+          div.addEventListener("click", () => {
+            searchInput.value = match;
+            suggestionsBox.innerHTML = "";
+            filterAndRender();
+          });
+          suggestionsBox.appendChild(div);
+        });
+      }
+
+      filterAndRender(); // <- This line makes search "live"
+    });
+
+    // Hide suggestions when focus is lost
+    searchInput.addEventListener("blur", () => {
+      setTimeout(() => suggestionsBox.innerHTML = "", 200);
+    });
+
+    categoryFilter.addEventListener("change", filterAndRender);
+
+    // Initial load
+    filterAndRender();
+  </script>
+</body>
+</html>

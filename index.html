@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Search with Filters</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, select { padding: 8px; font-size: 16px; }
+    .result-item  {
+        width: 600px;
+  display: flex;
+  flex-direction: column; /* or row if you want horizontal layout */
+  gap: 6px; /* optional spacing between elements */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background-color: #f9f9f9;
+}
+    .tags { margin-top: 5px; }
+    .tag {
+      display: inline-block;
+      background-color: #0078d4;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    #suggestions {
+      border: 1px solid #ccc;
+      max-width: 300px;
+      position: absolute;
+      background: white;
+      z-index: 100;
+    }
+    .suggestion-item {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .suggestion-item:hover {
+      background-color: #f0f0f0;
+    }
+    #resultsContainer {
+  display: flex;
+  margin: auto;
+  width: 80%;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 1rem;
+}
+  </style>
+</head>
+<body>
+
+  <h2>Live Search Filter Example</h2>
+
+  <input type="text" id="searchInput" placeholder="Type to search..." autocomplete="on" />
+  <div id="suggestions"></div>
+
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+    <option value="relevance">Relevance</option>
+    <option value="date">Date</option>
+  </select>
+
+  <div id="resultsContainer"></div>
+
+  <script>
+    const data = [
+      {
+        title: "HTML Basics",
+        body: "HTML Basics",
+        category: "relevance",
+        date: "2023-10-01",
+        tags: ["HTML", "Beginner"],
+        url: 'https://www.comunityplatform.com/'
+      },
+      {
+        title: "CSS Flexbox Guide",
+        body: "HTML Basics",
+        category: "relevance",
+        date: "2023-11-15",
+        tags: ["CSS", "Flexbox"],
+        url: 'https://www.comunityplatform.com/'
+      },
+      {
+        title: "Latest Web Design Trends",
+        body: "HTML Basics",
+        category: "date",
+        date: "2024-01-20",
+        tags: ["Trends", "Design"],
+        url: 'https://www.comunityplatform.com/'
+
+      },
+      {
+        title: "JavaScript Async Patterns",
+        body: "HTML Basics",
+        category: "relevance",
+        date: "2023-12-05",
+        tags: ["JavaScript", "Async"],
+        url: 'https://www.comunityplatform.com/'
+      },
+      {
+        title: "2024 Web Dev Updates",
+        body: "HTML Basics",
+        category: "date",
+        date: "2024-02-01",
+        tags: ["Trends", "JavaScript"],
+        url: 'https://www.comunityplatform.com/'
+      },
+      {
+                title: 'DIGITAL PLATFORM PARTNER',
+                body: 'Organizations that will remain relevant and competitive in the modern economy will need to create digital platforms that connect and streamline all interactions within their commercial boundaries and beyond to other digitally interconnected ecosystems.',
+                category: 'relevance',
+                tags:['Digital Platform'],
+                date: "2025-03-10",
+                url: 'https://www.comunityplatform.com/'
+            },
+            {
+                title: 'A platform for building digital organizations',
+                body: 'Digital platforms are transformative systems that support an ecosystem of end users, clients, suppliers, and digital product developers who collaborate and create value. Let ComUnity be your digital partner by taking care of the complex platform engineering layer so you can focus on building out a digital portal that differentiates your organization, improves competitiveness and creates business value.',
+                category: 'relevance',
+                tags:['Digital Platform', 'ComUnity'],
+                date: "2025-03-10",
+                url: 'https://www.comunityplatform.com/'
+            },
+            {
+                title: 'Platform engineering',
+                body: 'Platform engineering is an emerging technology approach that can accelerate the delivery of applications and the pace at which they produce business value. It improves developer experience and productivity by providing self-service capabilities with automated infrastructure operations. This accelerates a product team’s delivery of customer value.',
+                category: 'relevance',
+                tags:['Platform engineering', 'Customer Value'],
+                date: "2025-03-10",
+                url: 'https://www.comunityplatform.com/'
+            },
+            {
+                title: 'BENEFITS',
+                body: 'It enables business outcomes to be achieved significantly faster because developers can focus on developing without the need for a team to provide infrastructure. It is composable, containing discrete services that can be used independently.',
+                category: 'relevance',
+                tags:['Composable', 'Benefits'],
+                date: "2025-03-10",
+                url: 'https://www.comunity.me/technical.html'
+            },
+            
+    ];
+
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const suggestionsBox = document.getElementById("suggestions");
+
+    const allKeywords = Array.from(
+      new Set(data.flatMap(d => [d.title, d.body, ...d.tags]))
+    );
+
+    function filterAndRender() {
+      const query = searchInput.value.toLowerCase();
+      const category = categoryFilter.value;
+
+      const filtered = data.filter(item => {
+        const matchesCategory = category === 'all' || item.category === category;
+        const matchesSearch =
+          item.title.toLowerCase().includes(query) ||  item.body.toLowerCase().includes(query) ||
+          item.tags.some(tag => tag.toLowerCase().includes(query));
+        return matchesCategory && matchesSearch;
+      });
+
+      renderResults(filtered);
+    }
+
+    function renderResults(items) {
+      resultsContainer.innerHTML = "";
+
+      if (items.length === 0) {
+        resultsContainer.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.innerHTML = `
+          <strong>${item.title}</strong><br>
+          Category: ${item.category} | Date: ${item.date}
+          <div>${item.body}</div>
+           <div><a href='${item.url}'><i>${item.url}</i></a></div>
+          <div class="tags">
+            ${item.tags.map(tag => `<span class="tag" data-tag="${tag}">${tag}</span>`).join(' ')}
+          </div>
+        `;
+        resultsContainer.appendChild(div);
+      });
+
+      document.querySelectorAll(".tag").forEach(tagEl => {
+        tagEl.addEventListener("click", () => {
+          searchInput.value = tagEl.dataset.tag;
+          filterAndRender();
+        });
+      });
+    }
+
+    // Live filter on input
+    searchInput.addEventListener("input", () => {
+      const value = searchInput.value.toLowerCase();
+      suggestionsBox.innerHTML = "";
+
+      if (value.length > 0) {
+        const matches = allKeywords.filter(k => k.toLowerCase().includes(value)).slice(0, 5);
+        matches.forEach(match => {
+          const div = document.createElement("div");
+          div.className = "suggestion-item";
+          div.textContent = match;
+          div.addEventListener("click", () => {
+            searchInput.value = match;
+            suggestionsBox.innerHTML = "";
+            filterAndRender();
+          });
+          suggestionsBox.appendChild(div);
+        });
+      }
+
+      filterAndRender(); // <- This line makes search "live"
+    });
+
+    // Hide suggestions when focus is lost
+    searchInput.addEventListener("blur", () => {
+      setTimeout(() => suggestionsBox.innerHTML = "", 200);
+    });
+
+    categoryFilter.addEventListener("change", filterAndRender);
+
+    // Initial load
+    filterAndRender();
+  </script>
+</body>
+</html>
